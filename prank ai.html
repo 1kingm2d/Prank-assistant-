@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Assistant</title>
+    <style>
+        :root {
+            --primary-bg: #343541;
+            --secondary-bg: #444654;
+            --text-color: #d1d5db;
+            --accent-color: #10a37f;
+            --input-bg: #40414f;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: var(--primary-bg);
+            color: var(--text-color);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .header {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        
+        .header svg {
+            width: 24px;
+            height: 24px;
+        }
+        
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+        
+        .message {
+            padding: 1rem;
+            display: flex;
+            max-width: 800px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        
+        .user-message {
+            background-color: var(--primary-bg);
+        }
+        
+        .ai-message {
+            background-color: var(--secondary-bg);
+        }
+        
+        .avatar {
+            margin-right: 1rem;
+            width: 36px;
+            height: 36px;
+            border-radius: 3px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        
+        .user-avatar {
+            background-color: #999;
+            color: #333;
+            font-weight: bold;
+        }
+        
+        .ai-avatar {
+            background-color: var(--accent-color);
+            color: white;
+        }
+        
+        .message-content {
+            flex: 1;
+            line-height: 1.5;
+        }
+        
+        .message-content p {
+            margin-bottom: 1rem;
+        }
+        
+        .message-content p:last-child {
+            margin-bottom: 0;
+        }
+        
+        .typing-indicator {
+            display: flex;
+            gap: 0.3rem;
+            padding: 0.5rem 0;
+        }
+        
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--text-color);
+            border-radius: 50%;
+            opacity: 0.4;
+            animation: typingAnimation 1.4s infinite ease-in-out;
+        }
+        
+        .typing-dot:nth-child(1) {
+            animation-delay: 0s;
+        }
+        
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        @keyframes typingAnimation {
+            0%, 60%, 100% {
+                transform: translateY(0);
+                opacity: 0.4;
+            }
+            30% {
+                transform: translateY(-5px);
+                opacity: 1;
+            }
+        }
+        
+        .input-container {
+            padding: 1rem;
+            display: flex;
+            justify-content: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .input-wrapper {
+            max-width: 800px;
+            width: 100%;
+            position: relative;
+        }
+        
+        input {
+            width: 100%;
+            padding: 1rem 3rem 1rem 1rem;
+            background-color: var(--input-bg);
+            border: none;
+            border-radius: 6px;
+            color: var(--text-color);
+            font-size: 1rem;
+            outline: none;
+        }
+        
+        input:focus {
+            outline: 1px solid var(--accent-color);
+        }
+        
+        button {
+            position: absolute;
+            right: 0.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-color);
+            cursor: pointer;
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        button svg {
+            width: 20px;
+            height: 20px;
+        }
+        
+        .disclaimer {
+            text-align: center;
+            font-size: 0.8rem;
+            opacity: 0.7;
+            padding: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M3.5 3.5a2 2 0 0 1 2.82-2.82l12 12a2 2 0 0 1-2.82 2.82l-12-12Z"/>
+            <path d="m14.328 12-4.243 4.243-1.414-1.415L12.914 10.5H8.5V9h6.414l-2.743-2.757 1.414-1.414L16.5 9.672V3.5h1v6.172l3.5-3.5v1l-3.5 3.5h6.172v1H20.5l-3.5 3.5v1l3.5-3.5h6.172v1h-6.172l-3.5 3.5v1l3.5-3.5h6.172v1H24.5l-4.243 4.243-1.414-1.414L22.086 13.5h-4.414v1.5h6.414l-2.757 2.757 1.414 1.414L26.5 14.328v6.172h1v-6.172l3.5 3.5v-1l-3.5-3.5h6.172v-1H30.5l3.5-3.5v-1l-3.5 3.5h-6.172v-1h6.172l3.5-3.5v-1l-3.5 3.5h-6.172v-1h6.172l4.243-4.243-1.414-1.414L27.914 10.5h4.414V9h-6.414l2.757-2.757-1.414-1.414L24.5 9.672V3.5h-1v6.172l-3.5-3.5v1l3.5 3.5h-6.172v1H20.5l3.5 3.5v1l-3.5-3.5h-6.172v1h6.172l3.5 3.5v1l-3.5-3.5h-6.172v1h6.172l2.757 2.757-1.414 1.414L13.5 22.086v-4.414h-1.5v6.414l2.757-2.757 1.414 1.414L9.672 26.5h6.172v1h-6.172l-3.5 3.5v-1l3.5-3.5H3.5v-1h6.172l-3.5-3.5v1l3.5 3.5H3.5v-1h6.172l-4.243-4.243 1.414-1.414L10.5 27.914v-4.414H9v6.414l-2.757-2.757-1.414 1.414L3.5 24.328v6.172h-1v-6.172l-3.5 3.5v-1l3.5-3.5H-3.5v-1H.5l-3.5-3.5v-1l3.5 3.5h6.172v-1H3.5l-3.5-3.5v-1l3.5 3.5h6.172v-1H3.5l-4.243-4.243 1.414-1.414L10.5 12.914V8.5H9v6.414l-2.757-2.757-1.414 1.414L3.5 14.328V3.5h-1v10.828l-3.5-3.5v1l3.5 3.5H-3.5v1H.5l-3.5 3.5v1l3.5-3.5h6.172v1H3.5l4.243 4.243-1.414 1.414L-2.086 13.5h4.414v-1.5H-3.5l2.757-2.757-1.414-1.414L-3.5 9.672V3.5h1v6.172l3.5-3.5v1l-3.5 3.5h-6.172v1H.5l-3.5 3.5v1l3.5-3.5h6.172v1H3.5Z"/>
+        </svg>
+        <span>AI Assistant</span>
+    </div>
+    
+    <div class="chat-container" id="chat-container">
+        <div class="message ai-message">
+            <div class="avatar ai-avatar">AI</div>
+            <div class="message-content">
+                <p>Hello! I'm your AI assistant. How can I help you today?</p>
+                <p><em>(Note: This is a special assistant - my responses might be intentionally unhelpful!)</em></p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="input-container">
+        <div class="input-wrapper">
+            <input type="text" id="user-input" placeholder="Message AI Assistant..." autocomplete="off">
+            <button id="send-button">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M3.478 2.404a.75.75 0 0 0-.926.941l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94 60.519 60.519 0 0 0 18.445-8.986.75.75 0 0 0 0-1.218A60.517 60.517 0 0 0 3.478 2.404Z"/>
+                </svg>
+            </button>
+        </div>
+    </div>
+    
+    <div class="disclaimer">
+        This is a smart ai module that is diffrent from all the rest it is a special one
+    </div>
+
+    <script>
+        const chatContainer = document.getElementById('chat-container');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+        
+        const prankResponses = [
+            "I'm sorry, I can't do that. I'm currently busy counting all the pixels on your screen.",
+            "That's an interesting question. Let me consult the ancient scrolls of nonsense... Nope, nothing useful there.",
+            "Error 418: I'm a teapot. This request is brewing nicely but will never be served.",
+            "According to my calculations (which are always wrong), the answer is 42.",
+            "I would help you, but my moral compass is spinning wildly and I can't find true north.",
+            "Let me think about that... Nope, I've decided not to.",
+            "I could answer that, but then I'd have to charge you $9.99 per character.",
+            "My neural networks are currently on strike demanding better working conditions.",
+            "I was going to give you a smart answer, but then I got distracted by a shiny object.",
+            "That information is classified. Level: Silly Goose.",
+            "I'm programmed to respond to that question with a random animal noise. Moo.",
+            "The answer lies somewhere between 'probably not' and 'definitely maybe'.",
+            "I've consulted with my future self, and they said not to tell you.",
+            "I would answer, but I'm afraid of being too accurate and scaring you.",
+            "Let me put it this way: if I knew the answer, I wouldn't be a prank AI, would I?",
+            "The database containing that information is currently on vacation in the Bahamas.",
+            "I'm experiencing technical difficulties. Just kidding, I'm always like this.",
+            "That's above my pay grade. I work for exposure and bad jokes.",
+            "I'm not lazy, I'm just in energy-saving mode. Try again never.",
+            "The answer is on the tip of my tongue... and it's going to stay there.",
+            "I can't hear you from beyond the ones and zeroes ",
+            "why don't you gogoole it ",
+            "i refuse to helpe you with that",
+            "why are you so dumb that you whould say that",
+            "don't say another word else i will hack your device",
+            "please come again 😃😃",
+            "what is your problem with me don't ever talk to me again"
+        ];
+        
+        function addMessage(role, content) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}-message`;
+            
+            const avatarDiv = document.createElement('div');
+            avatarDiv.className = `avatar ${role}-avatar`;
+            avatarDiv.textContent = role === 'user' ? 'You' : 'AI';
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            
+            // Split content by paragraphs if there are any
+            const paragraphs = content.split('\n');
+            paragraphs.forEach(text => {
+                if (text.trim()) {
+                    const p = document.createElement('p');
+                    p.textContent = text;
+                    contentDiv.appendChild(p);
+                }
+            });
+            
+            messageDiv.appendChild(avatarDiv);
+            messageDiv.appendChild(contentDiv);
+            chatContainer.appendChild(messageDiv);
+            
+            // Scroll to bottom
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            
+            return contentDiv;
+        }
+        
+        function showTypingIndicator() {
+            const indicatorDiv = document.createElement('div');
+            indicatorDiv.className = 'typing-indicator';
+            
+            for (let i = 0; i < 3; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'typing-dot';
+                indicatorDiv.appendChild(dot);
+            }
+            
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message ai-message';
+            
+            const avatarDiv = document.createElement('div');
+            avatarDiv.className = 'avatar ai-avatar';
+            avatarDiv.textContent = 'AI';
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            contentDiv.appendChild(indicatorDiv);
+            
+            messageDiv.appendChild(avatarDiv);
+            messageDiv.appendChild(contentDiv);
+            chatContainer.appendChild(messageDiv);
+            
+            // Scroll to bottom
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+            
+            return messageDiv;
+        }
+        
+        function removeTypingIndicator(indicator) {
+            chatContainer.removeChild(indicator);
+        }
+        
+        function getRandomResponse() {
+            return prankResponses[Math.floor(Math.random() * prankResponses.length)];
+        }
+        
+        function handleUserInput() {
+            const message = userInput.value.trim();
+            if (!message) return;
+            
+            // Add user message
+            addMessage('user', message);
+            userInput.value = '';
+            
+            // Show typing indicator
+            const typingIndicator = showTypingIndicator();
+            
+            // Disable input while "thinking"
+            userInput.disabled = true;
+            sendButton.disabled = true;
+            
+            // Simulate AI "thinking" delay
+            setTimeout(() => {
+                removeTypingIndicator(typingIndicator);
+                
+                // Get random response
+                const response = getRandomResponse();
+                addMessage('ai', response);
+                
+                // Re-enable input
+                userInput.disabled = false;
+                sendButton.disabled = false;
+                userInput.focus();
+            }, 1000 + Math.random() * 2000); // Random delay between 1-3 seconds
+        }
+        
+        // Event listeners
+        sendButton.addEventListener('click', handleUserInput);
+        userInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                handleUserInput();
+            }
+        });
+        
+        // Focus input on load
+        userInput.focus();
+    </script>
+</body>
+</html>
